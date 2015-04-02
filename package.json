@@ -1,0 +1,23 @@
+{
+  "name": "backbone-ssync",
+  "author": "mickael.jeanroy@gmail.com",
+  "main": "dist/backbone-ssync.js",
+  "version": "0.0.0",
+  "description": "Backbone plugin that prevent from parallel same requests",
+  "devDependencies": {
+    "gulp": "3.8.11",
+    "gulp-jshint": "1.9.4",
+    "gulp-task-listing": "1.0.0",
+    "karma": "0.12.31",
+    "karma-chrome-launcher": "0.1.7",
+    "karma-jasmine": "0.3.5",
+    "karma-phantomjs-launcher": "0.1.4"
+  },
+  "engines": {
+    "node": ">=0.10.0"
+  },
+  "scripts": {
+    "test": "gulp test",
+    "build": "gulp build"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "name": "backbone-ssync",
+  "version": "0.0.0",
+  "authors": [
+    "Mickael Jeanroy <mickael.jeanroy@gmail.com>"
+  ],
+  "description": "Backbone plugin that prevent from parallel same requests",
+  "main": "dist/backbone-ssync.js",
+  "keywords": [
+    "backbone"
+  ],
+  "license": "MIT",
+  "private": false,
+  "ignore": [
+    "node_modules",
+    "bower_components",
+    "test",
+    "gulpfile.js"
+  ],
+  "dependencies": {}
+}
