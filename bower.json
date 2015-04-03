@@ -17,5 +17,8 @@
     "test",
     "gulpfile.js"
   ],
-  "dependencies": {}
+  "dependencies": {
+    "backbone": ">= 1.0.0",
+    "underscore": ">= 1.7.0"
+  }
 }

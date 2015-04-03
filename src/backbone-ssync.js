@@ -39,16 +39,24 @@ var opModes = {
   'delete': modes.PREVENT
 };
 
-var onDone = function(model, response, options) {
-  var method = options.method;
-  var xhr = options.xhr;
-  var pendings = model.$xhr[method];
-  var idx = _.indexOf(pendings, options.xhr);
+var ERROR_ABORT = '[ssync] Abort because of new incoming request';
 
-  // Remove pending xhr
-  if (idx > -1) {
-    pendings.splice(idx, 1);
-  }
+var onDone = function(method, model, options) {
+  return function(data, textStatus) {
+    var xhr = options.xhr;
+    var pendings = model.$xhr[method];
+    var idx = _.indexOf(pendings, options.xhr);
+
+    // Remove pending xhr
+    if (idx > -1) {
+      pendings.splice(idx, 1);
+    }
+
+    // Free memory
+    method = model = options = null;
+
+    return !!xhr._preventError;
+  };
 };
 
 var wrap = function(orig, fn) {
@@ -56,53 +64,65 @@ var wrap = function(orig, fn) {
     return fn;
   }
 
-  return _.wrap(orig, function(f) {
+  return _.wrap(orig, function(f, jqXhr, statusText) {
     var args = _.rest(arguments);
     fn.apply(this, args);
-    return f.apply(this, args);
+
+    // Need to fix this if user want to abort
+    if (statusText !== ERROR_ABORT) {
+      f.apply(this, args);
+    }
+
+    // Free memory
+    orig = fn = null;
   });
 };
 
 var operations = {};
 
 operations[modes.FORCE] = function(method, model, opts) {
-  var success = opts.success;
-  var error = opts.error;
-
-  opts.success = wrap(opts.success, onDone);
-  opts.error = wrap(opts.error, onDone);
+  var done = onDone(method, model, opts);
+  opts.success = wrap(opts.success, done);
+  opts.error = wrap(opts.error, done);
 
   var pendings = model.$xhr[method];
-  var xhr = $$sync.apply(this, arguments);
+  var xhr = $$sync.apply(this, [method, model, opts]);
+
+  // Add pending jqXhr
   pendings.push(xhr);
+
+  // Free memory
+  done = null;
+
   return xhr;
 };
 
 operations[modes.PREVENT] = function(method, model) {
   return _.isEmpty(model.$xhr[method]) ?
-    this[modes.FORCE].apply(this, arguments) :
+    operations[modes.FORCE].apply(this, arguments) :
     null;
 };
 
 operations[modes.ABORT] = function(method, model) {
-  _.invoke(model.$xhr[method], 'abort');
-  return this[modes.FORCE].apply(this, arguments);
+  _.each(model.$xhr[method], function(jqXhr) {
+    jqXhr.abort(ERROR_ABORT);
+  });
+
+  return operations[modes.FORCE].apply(this, arguments);
 };
 
 Backbone.ssync = Backbone.sync = function(method, model, options) {
   var opts = options || opts;
   var xhr = model.$xhr = model.$xhr || {};
-  var mode = opts.ssync = opts.ssync || opModes[method];
-
-  // Add method to options object
-  opts.method = method;
+  var ssync = opts.ssync = opts.ssync || {};
+  var mode = ssync.mode = ssync.mode || opModes[method];
 
   // Create array of pending requests if needed
   if (!xhr[method]) {
     xhr[method] = [];
   }
 
-  return operations.apply(this, [method, model, opts]);
+  return operations[mode].apply(this, [method, model, opts]);
 };
 
 // Available modes

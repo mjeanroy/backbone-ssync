@@ -25,6 +25,22 @@
 var gulp = require('gulp');
 var jshint = require('gulp-jshint');
 var taskListing = require('gulp-task-listing');
+var karma = require('karma').server;
+
+var vendors = [
+  'node_modules/jquery/dist/jquery.js',
+  'node_modules/underscore/underscore.js',
+  'node_modules/backbone/backbone.js',
+  'node_modules/jasmine-ajax/lib/mock-ajax.js'
+];
+
+var files = [
+  'src/backbone-ssync.js'
+];
+
+var karmaFiles = vendors
+  .concat(files)
+  .concat('test/**/*.js');
 
 gulp.task('help', taskListing);
 
@@ -34,6 +50,30 @@ gulp.task('lint', function() {
     .pipe(jshint.reporter("default"));
 });
 
-gulp.task('build', ['lint']);
+gulp.task('tdd', function(done) {
+  var options = {
+    configFile: __dirname + '/karma.conf.js',
+    files: karmaFiles
+  };
+
+  karma.start(options, function() {
+    done();
+  });
+});
+
+gulp.task('test', function(done) {
+  var options = {
+    configFile: __dirname + '/karma.conf.js',
+    files: karmaFiles,
+    singleRun: true,
+    browsers: ['PhantomJS']
+  };
+
+  karma.start(options, function() {
+    done();
+  });
+});
+
+gulp.task('build', ['lint', 'test']);
 
 gulp.task('default', ['build']);
