@@ -22,15 +22,20 @@
  * SOFTWARE.
  */
 
+/* global _ */
+/* global Backbone */
+
 // Keep original sync method
 var $$sync = Backbone.sync;
 
+// Constants defining mode values
 var modes = {
   'PREVENT': 'prevent',
   'FORCE': 'force',
   'ABORT': 'abort'
 };
 
+// Default mode defined by sync method
 var opModes = {
   'read': modes.ABORT,
   'update': modes.PREVENT,
@@ -42,8 +47,7 @@ var opModes = {
 var ERROR_ABORT = '[ssync] Abort because of new incoming request';
 
 var onDone = function(method, model, options) {
-  return function(data, textStatus) {
-    var xhr = options.xhr;
+  return function() {
     var pendings = model.$xhr[method];
     var idx = _.indexOf(pendings, options.xhr);
 
@@ -54,8 +58,6 @@ var onDone = function(method, model, options) {
 
     // Free memory
     method = model = options = null;
-
-    return !!xhr._preventError;
   };
 };
 
