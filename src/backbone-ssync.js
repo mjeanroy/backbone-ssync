@@ -70,7 +70,6 @@ var wrap = function(orig, fn) {
     var args = _.rest(arguments);
     fn.apply(this, args);
 
-    // Need to fix this if user want to abort
     if (statusText !== ERROR_ABORT) {
       f.apply(this, args);
     }

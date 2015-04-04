@@ -25,7 +25,15 @@
 var gulp = require('gulp');
 var jshint = require('gulp-jshint');
 var taskListing = require('gulp-task-listing');
+var rename = require('gulp-rename');
+var wrap = require('gulp-wrap');
+var strip = require('gulp-strip-comments');
+var concat = require('gulp-concat');
+var uglify = require('gulp-uglify');
+var sourcemaps = require('gulp-sourcemaps');
 var karma = require('karma').server;
+
+var BUILD_FOLDER = 'dist';
 
 var vendors = [
   'node_modules/jquery/dist/jquery.js',
@@ -34,12 +42,16 @@ var vendors = [
   'node_modules/jasmine-ajax/lib/mock-ajax.js'
 ];
 
-var files = [
+var srcFiles = [
   'src/backbone-ssync.js'
 ];
 
+var distFiles = [
+  BUILD_FOLDER + '/backbone-ssync.js'
+];
+
 var karmaFiles = vendors
-  .concat(files)
+  .concat(distFiles)
   .concat('test/**/*.js');
 
 gulp.task('help', taskListing);
@@ -50,7 +62,22 @@ gulp.task('lint', function() {
     .pipe(jshint.reporter("default"));
 });
 
-gulp.task('tdd', function(done) {
+gulp.task('minify', ['lint'], function(done) {
+  return gulp.src(srcFiles)
+    .pipe(concat('backbone-ssync.js'))
+    .pipe(strip({ block: true }))
+    .pipe(wrap({
+      src: 'wrapper.js'
+    }))
+    .pipe(gulp.dest(BUILD_FOLDER))
+    .pipe(sourcemaps.init())
+      .pipe(uglify())
+      .pipe(rename('backbone-ssync.min.js'))
+    .pipe(sourcemaps.write('.'))
+    .pipe(gulp.dest(BUILD_FOLDER));
+});
+
+gulp.task('tdd', ['minify'], function(done) {
   var options = {
     configFile: __dirname + '/karma.conf.js',
     files: karmaFiles
@@ -61,7 +88,7 @@ gulp.task('tdd', function(done) {
   });
 });
 
-gulp.task('test', function(done) {
+gulp.task('test', ['minify'], function(done) {
   var options = {
     configFile: __dirname + '/karma.conf.js',
     files: karmaFiles,
@@ -74,6 +101,5 @@ gulp.task('test', function(done) {
   });
 });
 
-gulp.task('build', ['lint', 'test']);
-
+gulp.task('build', ['lint', 'test', 'minify']);
 gulp.task('default', ['build']);
