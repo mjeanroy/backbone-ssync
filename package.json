@@ -5,6 +5,10 @@
   "version": "0.0.0",
   "license": "MIT",
   "description": "Backbone plugin that prevent from parallel same requests",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:mjeanroy/backbone-ssync.git"
+  },
   "dependencies": {
     "backbone": ">= 1.0.0",
     "underscore": ">= 1.7.0"
