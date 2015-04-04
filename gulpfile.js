@@ -32,6 +32,10 @@ var concat = require('gulp-concat');
 var uglify = require('gulp-uglify');
 var sourcemaps = require('gulp-sourcemaps');
 var karma = require('karma').server;
+var git = require('gulp-git');
+var bump = require('gulp-bump');
+var gulpFilter = require('gulp-filter');
+var tag_version = require('gulp-tag-version');
 
 var BUILD_FOLDER = 'dist';
 
@@ -100,6 +104,32 @@ gulp.task('test', ['minify'], function(done) {
     done();
   });
 });
+
+['minor', 'major', 'patch'].forEach(function(level) {
+  gulp.task('release:' + level, ['build'], function(done) {
+    var packageJsonFilter = gulpFilter(function(file) {
+      return file.relative === 'package.json';
+    });
+
+    var distFilter = gulpFilter(function(file) {
+      return file.relative === 'dist';
+    });
+
+    return gulp.src(['./package.json', './bower.json', './dist/'])
+      .pipe(bump({type: level}))
+      .pipe(gulp.dest('./'))
+      .pipe(git.add({args: '-f'}))
+      .pipe(git.commit('release: release version'))
+      .pipe(packageJsonFilter)
+      .pipe(tag_version())
+      .pipe(packageJsonFilter.restore())
+      .pipe(distFilter)
+      .pipe(git.rm({args: '-r'}))
+      .pipe(git.commit('release: start new release'));
+  });
+});
+
+gulp.task('release', ['release:minor']);
 
 gulp.task('build', ['lint', 'test', 'minify']);
 gulp.task('default', ['build']);
