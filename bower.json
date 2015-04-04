@@ -4,6 +4,10 @@
   "authors": [
     "Mickael Jeanroy <mickael.jeanroy@gmail.com>"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:mjeanroy/backbone-ssync.git"
+  },
   "description": "Backbone plugin that prevent from parallel same requests",
   "main": "dist/backbone-ssync.js",
   "keywords": [
